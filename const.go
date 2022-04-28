@@ -3,7 +3,7 @@ package mutex
 import "errors"
 
 const (
-	NAME    = "mutex"
+	NAME    = "MUTEX"
 	DEFAULT = "default"
 )
 
