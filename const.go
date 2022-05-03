@@ -5,6 +5,7 @@ import "errors"
 const (
 	NAME    = "MUTEX"
 	DEFAULT = "default"
+	//
 )
 
 var (
