@@ -12,6 +12,10 @@ func (this *Module) Register(name string, value Any, override bool) {
 	switch config := value.(type) {
 	case Driver:
 		this.Driver(name, config, override)
+	case Config:
+		this.Config(name, config, override)
+	case Configs:
+		this.Configs(name, config, override)
 	}
 }
 

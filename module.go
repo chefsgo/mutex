@@ -36,7 +36,8 @@ type (
 		hashring *util.HashRing
 	}
 
-	Config struct {
+	Configs map[string]Config
+	Config  struct {
 		Driver  string
 		Weight  int
 		Prefix  string
@@ -50,63 +51,42 @@ type (
 	}
 )
 
-// Lock 加锁
-func (this Module) Lock(key string, expiries ...time.Duration) error {
-	locate := module.hashring.Locate(key)
+// Driver 注册驱动
+func (module *Module) Driver(name string, driver Driver, override bool) {
+	module.mutex.Lock()
+	defer module.mutex.Unlock()
 
-	if inst, ok := module.instances[locate]; ok {
+	if driver == nil {
+		panic("Invalid mutex driver: " + name)
+	}
 
-		expiry := inst.config.Expiry
-		if len(expiries) > 0 {
-			expiry = expiries[0]
+	if override {
+		module.drivers[name] = driver
+	} else {
+		if module.drivers[name] == nil {
+			module.drivers[name] = driver
 		}
-
-		// 加上前缀
-		key := inst.config.Prefix + key
-
-		return inst.connect.Lock(key, expiry)
 	}
-
-	return errInvalidMutexConnection
 }
 
-// LockTo 加锁到指定的连接
-func (this Module) LockTo(conn string, key string, expiries ...time.Duration) error {
-	if inst, ok := module.instances[conn]; ok {
+func (this *Module) Config(name string, config Config, override bool) {
+	this.mutex.Lock()
+	defer this.mutex.Unlock()
 
-		//默认过期时间
-		expiry := inst.config.Expiry
-		if len(expiries) > 0 {
-			expiry = expiries[0]
+	if name == "" {
+		name = chef.DEFAULT
+	}
+
+	if override {
+		this.configs[name] = config
+	} else {
+		if _, ok := this.configs[name]; ok == false {
+			this.configs[name] = config
 		}
-
-		// 加上前缀
-		key := inst.config.Prefix + key
-
-		return inst.connect.Lock(key, expiry)
 	}
-
-	return errInvalidMutexConnection
 }
-
-// Unlock 解锁
-func (this Module) Unlock(key string) error {
-	locate := module.hashring.Locate(key)
-
-	if inst, ok := module.instances[locate]; ok {
-		key := inst.config.Prefix + key //加上前缀
-		return inst.connect.Unlock(key)
+func (this *Module) Configs(config Configs, override bool) {
+	for key, val := range config {
+		this.Config(key, val, override)
 	}
-
-	return errInvalidMutexConnection
-}
-
-// UnlockFrom 从指定的连接解锁
-func (this Module) UnlockFrom(locate string, key string) error {
-	if inst, ok := module.instances[locate]; ok {
-		key := inst.config.Prefix + key //加上前缀
-		return inst.connect.Unlock(key)
-	}
-
-	return errInvalidMutexConnection
 }

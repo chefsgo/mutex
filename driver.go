@@ -20,21 +20,3 @@ type (
 		Unlock(key string) error
 	}
 )
-
-// Driver 注册驱动
-func (module *Module) Driver(name string, driver Driver, override bool) {
-	module.mutex.Lock()
-	defer module.mutex.Unlock()
-
-	if driver == nil {
-		panic("Invalid mutex driver: " + name)
-	}
-
-	if override {
-		module.drivers[name] = driver
-	} else {
-		if module.drivers[name] == nil {
-			module.drivers[name] = driver
-		}
-	}
-}
