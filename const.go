@@ -8,5 +8,6 @@ const (
 )
 
 var (
+	//
 	errInvalidMutexConnection = errors.New("Invalid mutex connection.")
 )
